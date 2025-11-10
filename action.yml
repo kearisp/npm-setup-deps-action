@@ -20,7 +20,9 @@ runs:
         run: |
             CURRENT_VERSION=$(npm pkg get dependencies.${{ inputs.package }} | sed -e 's/^"//' -e 's/"$//')
             BETA_VERSION=$(npm view ${{ inputs.package }}@${{ inputs.tag }} version 2> /dev/null || echo "")
-            if [[ "$BETA_VERSION" == "$CURRENT_VERSION"* ]]; then
+            echo "Found beta version $BETA_VERSION"
+            if [[ "$CURRENT_VERSION"* == "$BETA_VERSION" ]]; then
+                echo "Replacing ${{ inputs.package }} version $CURRENT_VERSION with $BETA_VERSION"
                 npm pkg set "dependencies.${{ inputs.package }}=^$BETA_VERSION"
                 OVERRIDES="${{ inputs.overrides }}"
                 if [[ -n "$OVERRIDES" ]]; then
