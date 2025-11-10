@@ -18,7 +18,7 @@ runs:
       - name: Setup dependency version
         shell: bash
         run: |
-            CURRENT_VERSION=$(npm pkg get dependencies.${{ inputs.package }} | sed -e 's/^"//' -e 's/"$//')
+            CURRENT_VERSION=$(npm pkg get dependencies.${{ inputs.package }} | sed -e 's/^"//' -e '/^\^//' -e 's/^~//' -e 's/"$//')
             BETA_VERSION=$(npm view ${{ inputs.package }}@${{ inputs.tag }} version 2> /dev/null || echo "")
             echo "Current version $CURRENT_VERSION"
             echo "Found beta version $BETA_VERSION"
