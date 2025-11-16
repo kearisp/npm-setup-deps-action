@@ -29,8 +29,11 @@ runs:
             if [[ -n "$GPG_PASSPHRASE" ]]; then
                 echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
                 gpg-connect-agent reloadagent /bye
-                KEYGRIP=$(gpg --with-keygrip --list-keys --fingerprint "$GPG_ID" | awk '/KEYGRIP/ { print $3 }')
-                /usr/lib/gnupg/gpg-preset-passphrase --preset "$KEYGRIP" <<< "$GPG_PASSPHRASE"
+                KEYGRIP=$(gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }')
+                for k in $KEYGRIP
+                do
+                    echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
+                done
             fi
             git config --global user.signingkey $GPG_ID
             git config commit.gpgsign true

@@ -61,38 +61,11 @@ jobs:
             uses: actions/checkout@v5
 
           - name: Setup GPG
-            env:
-                GPG_ID: ${{ vars.GPG_ID }}
-                GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-                GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-            shell: bash
-            run: |
-                gpg --batch --import <<< "$GPG_PRIVATE_KEY"
-                mkdir -p ~/.gnupg
-                chmod 700 ~/.gnupg
-                echo "batch" >> ~/.gnupg/gpg.conf
-                echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-                echo "no-tty" >> ~/.gnupg/gpg.conf
-                if [[ -n "$GPG_PASSPHRASE" ]]; then
-                    echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
-                    gpg-connect-agent reloadagent /bye
-                    gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }'
-                    KEYGRIP=$(gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }')
-                    for k in $KEYGRIP
-                    do
-                        echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
-                    done
-                fi
-                git config --global user.signingkey $GPG_ID
-                git config commit.gpgsign true
-                git config tag.gpgsign true
-
-#          - name: Setup GPG
-#            uses: ./.github/actions/setup-git-gpg
-#            with:
-#                id: ${{ vars.GPG_ID }}
-#                private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-#                passphrase: ${{ secrets.GPG_PASSPHRASE }}
+            uses: ./.github/actions/setup-git-gpg
+            with:
+                id: ${{ vars.GPG_ID }}
+                private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
           - name: Checkout code
             uses: actions/checkout@v5
@@ -103,26 +76,6 @@ jobs:
             uses: actions/download-artifact@v5
             with:
                 name: "dist"
-
-          - name: Setup gpg
-            shell: bash
-            run: |
-                gpg --batch --import <<< "${{ secrets.GPG_PRIVATE_KEY }}"
-                mkdir -p ~/.gnupg
-                chmod 700 ~/.gnupg
-                echo "batch" >> ~/.gnupg/gpg.conf
-                echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-                echo "no-tty" >> ~/.gnupg/gpg.conf
-                echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
-                gpg-connect-agent reloadagent /bye
-                KEYGRIP=$(gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }')
-                for k in $KEYGRIP
-                do
-                    echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
-                done
-                git config --global user.signingkey ${{ vars.GPG_ID }}
-                git config commit.gpgsign true
-                git config tag.gpgsign true
 
           - name: Create tag
             env:
