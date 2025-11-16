@@ -1,0 +1,110 @@
+name: Beta
+on:
+    pull_request:
+        types:
+          - opened
+          - reopened
+          - synchronize
+        paths:
+          - src
+          - package.json
+          - tsconfig.json
+jobs:
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v5
+
+          - name: Setup Node.js
+            uses: actions/setup-node@v5
+            with:
+                node-version: 24
+                registry-url: 'https://registry.npmjs.org'
+
+          - name: Cache dependencies
+            uses: actions/cache@v4
+            with:
+                path: ~/.npm
+                key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
+                restore-keys: |
+                    ${{ runner.os }}-npm-
+
+          - name: Install dependencies
+            shell: bash
+            run: npm install
+
+          - name: Test
+            shell: bash
+            run: npm run test
+
+          - name: Build
+            shell: bash
+            run: npm run build
+
+          - name: Upload build
+            uses: actions/upload-artifact@v5
+            with:
+                name: "dist"
+                path: ./dist
+
+    tag:
+        name: Tag
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        needs:
+          - build
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v5
+            with:
+                ref: "release"
+
+          - name: Download build
+            uses: actions/download-artifact@v5
+            with:
+                name: "dist"
+
+          - name: Setup GPG
+            uses: ./.github/actions/setup-git-gpg
+            with:
+                id: ${{ secrets.GPG_ID }}
+                private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+          - name: Setup gpg
+            shell: bash
+            run: |
+                gpg --batch --import <<< "${{ secrets.GPG_PRIVATE_KEY }}"
+                mkdir -p ~/.gnupg
+                chmod 700 ~/.gnupg
+                echo "batch" >> ~/.gnupg/gpg.conf
+                echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+                echo "no-tty" >> ~/.gnupg/gpg.conf
+                echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+                gpg-connect-agent reloadagent /bye
+                KEYGRIP=$(gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }')
+                for k in $KEYGRIP
+                do
+                    echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
+                done
+                git config --global user.signingkey ${{ vars.GPG_ID }}
+                git config commit.gpgsign true
+                git config tag.gpgsign true
+
+          - name: Create tag
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+            shell: bash
+            run: |
+                git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+                git config --global user.name "Kris Papercut"
+                git config --global user.email "krispcut@gmail.com"
+                git add .
+                git commit --allow-empty -S -m "Pre-release beta"
+                git tag -fa beta -m "Pre-release beta"
+                git push origin release
+                git push origin beta --force
