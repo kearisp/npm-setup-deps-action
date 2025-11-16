@@ -15,9 +15,9 @@ runs:
     steps:
       - name: Setup GPG
         env:
-            GPS_ID: ${{ inputs.id }}
+            GPG_ID: ${{ inputs.id }}
             GPG_PRIVATE_KEY: ${{ inputs.private-key }}
-            GPS_PASSPHRASE: ${{ inputs.passphrase }}
+            GPG_PASSPHRASE: ${{ inputs.passphrase }}
         shell: bash
         run: |
             gpg --batch --import <<< "$GPG_PRIVATE_KEY"
@@ -32,9 +32,9 @@ runs:
                 KEYGRIP=$(gpg-connect-agent -q 'keyinfo --list' /bye | awk '/KEYINFO/ { print $3 }')
                 for k in $KEYGRIP
                 do
-                    echo "$GPG_PASSPHRASE"  | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
+                    echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $k
                 done
             fi
-            git config --global user.signingkey $GPS_ID
+            git config --global user.signingkey $GPG_ID
             git config commit.gpgsign true
             git config tag.gpgsign true
