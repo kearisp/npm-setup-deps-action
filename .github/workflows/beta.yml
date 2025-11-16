@@ -59,6 +59,16 @@ jobs:
         steps:
           - name: Checkout code
             uses: actions/checkout@v5
+
+          - name: Setup GPG
+            uses: ./.github/actions/setup-git-gpg
+            with:
+                id: ${{ vars.GPG_ID }}
+                private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+                passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+          - name: Checkout code
+            uses: actions/checkout@v5
             with:
                 ref: "release"
 
@@ -66,13 +76,6 @@ jobs:
             uses: actions/download-artifact@v5
             with:
                 name: "dist"
-
-          - name: Setup GPG
-            uses: ./.github/actions/setup-git-gpg
-            with:
-                id: ${{ secrets.GPG_ID }}
-                private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-                passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
           - name: Setup gpg
             shell: bash
