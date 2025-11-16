@@ -1,0 +1,34 @@
+name: Setup deps
+description: "Updates a dependency to its prerelease (tagged) version and synchronizes optional overrides."
+
+inputs:
+    package:
+        required: true
+        description: "Package name"
+    tag:
+        required: true
+        description: "Tag"
+    overrides:
+        required: false
+        description: "Space-separated list of packages that should override this dependency"
+
+runs:
+    using: 'composite'
+    steps:
+      - name: Setup dependency version
+        shell: bash
+        run: |
+            CURRENT_VERSION=$(npm pkg get dependencies.${{ inputs.package }} | sed -e 's/^"//' -e 's/^\^//' -e 's/^~//' -e 's/"$//')
+            BETA_VERSION=$(npm view ${{ inputs.package }}@${{ inputs.tag }} version 2> /dev/null || echo "")
+            echo "Current version $CURRENT_VERSION"
+            echo "Found beta version $BETA_VERSION"
+            if [[ "$BETA_VERSION" == "$CURRENT_VERSION"* ]]; then
+                echo "Replacing ${{ inputs.package }} version $CURRENT_VERSION with $BETA_VERSION"
+                npm pkg set "dependencies.${{ inputs.package }}=^$BETA_VERSION"
+                OVERRIDES="${{ inputs.overrides }}"
+                if [[ -n "$OVERRIDES" ]]; then
+                    for OVERRIDE in $OVERRIDES; do
+                        npm pkg set "overrides.${OVERRIDE}.${{ inputs.package }}=^$BETA_VERSION"
+                    done
+                fi
+            fi
