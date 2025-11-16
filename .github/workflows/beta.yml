@@ -60,12 +60,32 @@ jobs:
           - name: Checkout code
             uses: actions/checkout@v5
 
+          - name: Setup Node.js
+            uses: actions/setup-node@v5
+            with:
+                node-version: 24
+
+          - name: Versions
+            shell: bash
+            run: |
+                MAJOR=$(node -p "require('./package.json').version.split('.')[0]")
+                MINOR=$(node -p "require('./package.json').version.split('.')[1]")
+                PATCH=$(node -p "require('./package.json').version.split('.')[2]")
+                echo "MAJOR=$MAJOR" >> $GITHUB_ENV
+                echo "MINOR=$MINOR" >> $GITHUB_ENV
+                echo "PATCH=$PATCH" >> $GITHUB_ENV
+
           - name: Setup GPG
             uses: ./.github/actions/setup-git-gpg
             with:
                 id: ${{ vars.GPG_ID }}
                 private-key: ${{ secrets.GPG_PRIVATE_KEY }}
                 passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+          - name: Setup git
+            uses: ./.github/actions/setup-git
+            with:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           - name: Checkout code
             uses: actions/checkout@v5
@@ -78,16 +98,20 @@ jobs:
                 name: "dist"
 
           - name: Create tag
-            env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
             shell: bash
             run: |
-                git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
-                git config --global user.name "Kris Papercut"
-                git config --global user.email "krispcut@gmail.com"
+                TAG_VERSION="beta"
+                MAJOR_VERSION="v${{ env.MAJOR }}-beta"
+                FULL_VERSION="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-beta"
                 git add .
-                git commit --allow-empty -S -m "Pre-release beta"
-                git tag -fa beta -m "Pre-release beta"
+                git commit --allow-empty -S -m "Pre-release $FULL_VERSION"
+                git tag -d $TAG_VERSION || true
+                git tag -d $MAJOR_VERSION || true
+                git tag -d $FULL_VERSION || true
+                git tag -a $TAG_VERSION -m "Pre-release $FULL_VERSION"
+                git tag -a $MAJOR_VERSION -m "Pre-release $FULL_VERSION"
+                git tag -a $FULL_VERSION -m "Pre-release $FULL_VERSION"
                 git push origin release
-                git push origin beta --force
+                git push origin $TAG_VERSION --force
+                git push origin $MAJOR_VERSION --force
+                git push origin $FULL_VERSION --force
