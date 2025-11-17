@@ -4,7 +4,7 @@
 ```yaml
 steps:
   - name: Setup setup package version
-    uses: kearisp/npm-setup-deps-action@v0.0.6
+    uses: kearisp/npm-setup-deps-action@v0
     with:
         package: "@kearisp/cli"
         tag: "beta"

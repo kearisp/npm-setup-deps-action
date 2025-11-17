@@ -1,0 +1,8 @@
+{
+    "version": "0.0.7",
+    "scripts": {
+        "build": "mkdir -p dist",
+        "postbuild": "cp ./action.yml ./dist/action.yml",
+        "test": "echo 'Noting to test'"
+    }
+}
