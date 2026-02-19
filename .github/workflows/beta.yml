@@ -15,16 +15,16 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout code
-            uses: actions/checkout@v5
+            uses: actions/checkout@v6
 
           - name: Setup Node.js
-            uses: actions/setup-node@v5
+            uses: actions/setup-node@v6
             with:
                 node-version: 24
                 registry-url: 'https://registry.npmjs.org'
 
           - name: Cache dependencies
-            uses: actions/cache@v4
+            uses: actions/cache@v5
             with:
                 path: ~/.npm
                 key: ${{ runner.os }}-npm-${{ hashFiles('**/package.json') }}
@@ -44,7 +44,7 @@ jobs:
             run: npm run build
 
           - name: Upload build
-            uses: actions/upload-artifact@v5
+            uses: actions/upload-artifact@v6
             with:
                 name: "dist"
                 path: ./dist
@@ -58,10 +58,10 @@ jobs:
           - build
         steps:
           - name: Checkout code
-            uses: actions/checkout@v5
+            uses: actions/checkout@v6
 
           - name: Setup Node.js
-            uses: actions/setup-node@v5
+            uses: actions/setup-node@v6
             with:
                 node-version: 24
 
@@ -88,12 +88,12 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           - name: Checkout code
-            uses: actions/checkout@v5
+            uses: actions/checkout@v6
             with:
                 ref: "release"
 
           - name: Download build
-            uses: actions/download-artifact@v5
+            uses: actions/download-artifact@v7
             with:
                 name: "dist"
 
