@@ -94,7 +94,6 @@ jobs:
                 TAG_VERSION="latest"
                 MAJOR_VERSION="v${{ env.MAJOR }}"
                 FULL_VERSION="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}"
-                ls -la
                 git add .
                 git commit --allow-empty -S -m "Release latest"
                 git tag -d $TAG_VERSION || true

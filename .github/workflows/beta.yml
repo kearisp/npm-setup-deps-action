@@ -103,6 +103,7 @@ jobs:
                 TAG_VERSION="beta"
                 MAJOR_VERSION="v${{ env.MAJOR }}-beta"
                 FULL_VERSION="v${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}-beta"
+                ls -la
                 git add .
                 git commit --allow-empty -S -m "Pre-release $FULL_VERSION"
                 git tag -d $TAG_VERSION || true
