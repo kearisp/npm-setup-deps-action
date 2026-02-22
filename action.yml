@@ -22,21 +22,4 @@ runs:
             TAG: ${{ inputs.tag }}
             OVERRIDES: ${{ inputs.overrides }}
         run: |
-            KEYS="peerDependencies devDependencies dependencies"
-            CURRENT_VERSION=""
-            BETA_VERSION=$(npm view $PACKAGE_NAME@$TAG version 2> /dev/null || echo "")
-            echo "Found $TAG version $BETA_VERSION"
-            for KEY in $KEYS; do
-                DEP_VERSION=$(npm pkg get "$KEY.$PACKAGE_NAME" | sed -e 's/^"//' -e 's/^\^//' -e 's/^~//' -e 's/"$//')
-                if [ $DEP_VERSION != '{}' ] && [[ "$BETA_VERSION" == "$DEP_VERSION"* ]]; then
-                    CURRENT_VERSION=$DEP_VERSION
-                    npm pkg set "$KEY.$PACKAGE_NAME=^$BETA_VERSION"
-                    echo "Version in $KEY changed $CURRENT_VERSION -> ^$BETA_VERSION"
-                fi
-            done
-            if [[ -n "$CURRENT_VERSION" ]] && [[ "$BETA_VERSION" == "$CURRENT_VERSION"* ]] && [[ -n "$OVERRIDES" ]]; then
-                for OVERRIDE in $OVERRIDES; do
-                    npm pkg set "overrides.$OVERRIDE.$PACKAGE_NAME=^$BETA_VERSION"
-                    echo "Version in $OVERRIDE overrides set ^$BETA_VERSION"
-                done
-            fi
+            bash ${{ github.action_path }}/bin/run.sh

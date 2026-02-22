@@ -1,8 +1,8 @@
 {
-    "version": "0.0.7",
+    "version": "0.0.8",
     "scripts": {
-        "build": "mkdir -p dist",
-        "postbuild": "cp ./action.yml ./dist/action.yml",
+        "build": "mkdir -p dist && mkdir -p dist/bin",
+        "postbuild": "cp ./action.yml ./dist/action.yml && cp ./bin/run.sh ./dist/bin/run.sh && chmod +x ./dist/bin/run.sh",
         "test": "echo 'Noting to test'"
     }
 }
